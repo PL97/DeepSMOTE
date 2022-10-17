@@ -47,7 +47,7 @@ def show_reconstruct(x, y, model, model_series_number="version_0"):
     grid1 = make_grid(x, nrow=1)
     grid2 = make_grid(recon_img, nrow=1)
     grid = torch.concat([grid1, grid2], axis=2).permute(1, 2, 0)
-    plt.figure(figsize=(10, 5))
+    plt.figure(figsize=(20, 50))
     plt.imshow(grid.detach().cpu().numpy())
     os.makedirs(f"figures/{model_series_number}/", exist_ok=True)
     plt.savefig(f"figures/{model_series_number}/recon_img_gallery.png")
