@@ -1,4 +1,7 @@
-
+import matplotlib.pyplot as plt
+from torchvision.utils import make_grid
+import torch
+import os
 
 class UnNormalize(object):
     '''
@@ -34,3 +37,18 @@ class UnNormalize(object):
                 tensor[:, :, idx] = tensor[:, :, idx]*s + m
             # The normalize code -> t.sub_(m).div_(s)
         return tensor
+
+
+def show_reconstruct(x, y, model, model_series_number="version_0"):
+    
+    plt.figure()
+    # unnorm = UnNormalize(fake=True)
+    recon_img = model(x)
+    grid1 = make_grid(x, nrow=1)
+    grid2 = make_grid(recon_img, nrow=1)
+    grid = torch.concat([grid1, grid2], axis=2).permute(1, 2, 0)
+    plt.figure(figsize=(10, 5))
+    plt.imshow(grid.detach().cpu().numpy())
+    os.makedirs(f"figures/{model_series_number}/", exist_ok=True)
+    plt.savefig(f"figures/{model_series_number}/recon_img_gallery.png")
+    plt.close()

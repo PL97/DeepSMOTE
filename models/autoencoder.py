@@ -7,11 +7,11 @@ import torch.nn as nn
 import torchvision.models as models
 import pytorch_lightning as pl
 from torchvision.datasets import CIFAR10
-from torchvision import transforms
+
 import torchvision
 import numpy as np
 from pytorch_lightning.plugins import DDPPlugin
-from pytorch_lightning.strategies.ddp import DDPStrategy
+
 from sklearn.neighbors import NearestNeighbors
 from imblearn.over_sampling import SMOTE
 from pytorch_lightning.callbacks import ModelCheckpoint
@@ -22,17 +22,7 @@ sys.path.append("../")
 from utils.utils import UnNormalize
 
 
-class DatasetSampler(torch.utils.data.sampler.Sampler):
-        def __init__(self, frac, idx):
-            self.idx = idx[:int(len(idx)*frac)]
 
-        def __iter__(self):
-            # return iter(self.idx)
-            for i in np.random.permutation(self.idx):
-                    yield i
-
-        def __len__(self):
-            return len(self.idx)
 
 
 class res_encoder(nn.Module):
@@ -164,7 +154,7 @@ class autoencoder(pl.LightningModule):
         {"params": self.decoder.parameters()}],
         lr=1e-3)
 
-    def generate_using_smote(self, dl):
+    def generate_using_smote(self, dl, model_series_number="version_0"):
         features_list = []
         y_list = []
         for x, y in dl:
@@ -178,86 +168,20 @@ class autoencoder(pl.LightningModule):
         print(Counter(y_sm))
 
 
-        x = torch.tensor(features_list[:25]).to(self.device)
+        x = torch.tensor(np.asarray(features_list[:25])).to(self.device)
         recon_img = self.decoder(x)
         grid = torchvision.utils.make_grid(recon_img, nrow=5).permute(1, 2, 0)
         print(grid.shape)
         plt.figure(figsize=(50, 50))
         plt.imshow(grid.detach().cpu().numpy())
-        plt.savefig("synthetic.png")
-
-
-
-def show_reconstruct(x, y, model):
-    
-    plt.figure()
-    unnorm = UnNormalize(fake=True)
-    for i in range(x.shape[0]):
-        input_x = x[i].unsqueeze(0)
-        x_hat = model(input_x)
-
-        plt.subplot(2, 5, 1+i%5)
-        plt.imshow(unnorm(input_x.squeeze()).detach().cpu().numpy().transpose(1, 2, 0))
-        plt.subplot(2, 5, 1+i%5+5)
-        plt.imshow(unnorm(x_hat.squeeze()).detach().cpu().numpy().transpose(1, 2, 0))
-    
-    plt.savefig("recon_img_gallery.png")
-    
+        plt.savefig(f"figures/{model_series_number}/synthetic.png")
     
     
     
 if __name__ == "__main__":
-    
-    # ## test case 1: train a autoencoder
-    # # mean = (0.485, 0.456, 0.406)
-    # # std = (0.229, 0.224, 0.225)
-    # mean = (0.5, 0.5, 0.5)
-    # std = (0.5, 0.5, 0.5)
-    # transform = transforms.Compose([
-    #         transforms.ToTensor(),
-    #         # transforms.RandomHorizontalFlip(),
-    #         # transforms.RandomVerticalFlip(),
-    #         # transforms.Normalize(mean, std),
-    # ])
-    
-    # mnist_dataset = torch.utils.data.DataLoader(CIFAR10(root="/home/le/DeepSmote/data", train= True, transform=transform, download=True),
-    #                                             batch_size=512,
-    #                                             num_workers=8,
-    #                                             persistent_workers=True,
-    #                                             shuffle=True)
-    #                                             # sampler=DatasetSampler(idx=list(range(50000)), frac=0.01))
-
-    
-    
-    # trainer = pl.Trainer(max_epochs=300, 
-    #                      accelerator="gpu", 
-    #                      devices=4, 
-    #                      strategy = DDPStrategy(find_unused_parameters=False),
-    #                      log_every_n_steps=5)
-    # model = autoencoder()
-
-    # trainer.fit(model, train_dataloaders=mnist_dataset)
-
-    # x, y = next(iter(mnist_dataset))
-    # show_reconstruct(x[:5], y[:5], model)
-    
+    pass
     # # test case 2: create a valid autoencoder
     # net = autoencoder()
     # test_input = torch.zeros(1, 3, 32, 32)
     
     # print(net(test_input).shape)
-
-    # test case 3: generate new samples using SMOTE
-    transform = transforms.Compose([
-            transforms.ToTensor(),
-    ])
-    mnist_dataset = torch.utils.data.DataLoader(CIFAR10(root="/home/le/DeepSmote/data", train= True, transform=transform, download=True),
-                                                batch_size=512,
-                                                num_workers=8,
-                                                persistent_workers=True,
-                                                # shuffle=True)
-                                                sampler=DatasetSampler(idx=list(range(50000)), frac=0.01))
-    MyLightningModule = autoencoder()
-    model = MyLightningModule.load_from_checkpoint('lightning_logs/version_0/checkpoints/epoch=299-step=7500.ckpt')
-    model.generate_using_smote(mnist_dataset)
-
