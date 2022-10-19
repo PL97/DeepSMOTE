@@ -164,10 +164,10 @@ class autoencoder(pl.LightningModule):
             features_list.extend(self.encoder(x).detach().cpu().numpy())
             y_list.extend(y.detach().cpu().numpy())
         
-        print(Counter(y_list))
+        print("Origional label distributin:", Counter(y_list))
         smt = SMOTE()
         features_sm, y_sm = smt.fit_resample(features_list, y_list)
-        print(Counter(y_sm))
+        print("New label distributin:",Counter(y_sm))
 
         if save:
             total_imgs = len(features_sm)
