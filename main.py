@@ -44,7 +44,7 @@ if __name__ == "__main__":
     
     
     else:
-        model_series_number = "version_3"
+        model_series_number = "version_1"
         MyLightningModule = autoencoder()
         model = MyLightningModule.load_from_checkpoint('lightning_logs/version_0/checkpoints/epoch=299-step=7500.ckpt')
         ## show reconstruction images and sythetic images
