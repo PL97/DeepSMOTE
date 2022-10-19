@@ -26,7 +26,7 @@ def get_cifar10_dataset():
             transforms.ToTensor(),
     ])
     
-    cifar10_dataset = DataLoader(CIFAR10(root="/home/le/DeepSmote/data", \
+    cifar10_dataset = DataLoader(CIFAR10(root="./data", \
                                                 train= True, \
                                                 transform=transform, download=True), \
                                                 batch_size=512, \
@@ -40,7 +40,7 @@ def get_cifar100_dataset():
             transforms.ToTensor(),
     ])
     
-    cifar100_dataset = DataLoader(CIFAR100(root="/home/le/DeepSmote/data", \
+    cifar100_dataset = DataLoader(CIFAR100(root="./data", \
                                                 train= True, \
                                                 transform=transform, download=True), \
                                                 batch_size=512, \

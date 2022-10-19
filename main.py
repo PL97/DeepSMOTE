@@ -24,7 +24,7 @@ if __name__ == "__main__":
     model = autoencoder()
 
     if args.synthesizing:
-        model_series_number = "version_3"
+        model_series_number = f"version_{args.model_series}"
         MyLightningModule = autoencoder()
         model = MyLightningModule.load_from_checkpoint('lightning_logs/version_0/checkpoints/epoch=299-step=7500.ckpt')
         model.generate_using_smote(dl, model_series_number=model_series_number, save=True, saved_path="./data/cifar100")
@@ -35,7 +35,7 @@ if __name__ == "__main__":
     if args.train:
         trainer = pl.Trainer(max_epochs=300, 
                             accelerator="gpu", 
-                            devices=4, 
+                            devices=1, 
                             strategy = DDPStrategy(find_unused_parameters=False),
                             log_every_n_steps=5)
         
@@ -44,7 +44,7 @@ if __name__ == "__main__":
     
     
     else:
-        model_series_number = "version_1"
+        model_series_number = f"version_{args.model_series}"
         MyLightningModule = autoencoder()
         model = MyLightningModule.load_from_checkpoint('lightning_logs/version_0/checkpoints/epoch=299-step=7500.ckpt')
         ## show reconstruction images and sythetic images
