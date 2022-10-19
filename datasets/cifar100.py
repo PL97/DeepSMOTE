@@ -1,6 +1,6 @@
 from torch.utils.data import sampler, DataLoader
 from torchvision import transforms
-from torchvision.datasets import CIFAR10
+from torchvision.datasets import CIFAR10, CIFAR100
 import numpy as np
 
 class DatasetSampler(sampler.Sampler):
@@ -21,16 +21,30 @@ class DatasetSampler(sampler.Sampler):
 
 
 
-def get_cifar100_dataset():
+def get_cifar10_dataset():
     transform = transforms.Compose([
             transforms.ToTensor(),
     ])
     
-    cifar100_dataset = DataLoader(CIFAR10(root="/home/le/DeepSmote/data", \
+    cifar10_dataset = DataLoader(CIFAR10(root="/home/le/DeepSmote/data", \
                                                 train= True, \
                                                 transform=transform, download=True), \
                                                 batch_size=512, \
                                                 num_workers=8, \
                                                 persistent_workers=True, \
-                                                sampler=DatasetSampler(idx=list(range(50000)), frac=0.01))
+                                                sampler=DatasetSampler(idx=list(range(50000)), frac=1))
+    return cifar10_dataset
+
+def get_cifar100_dataset():
+    transform = transforms.Compose([
+            transforms.ToTensor(),
+    ])
+    
+    cifar100_dataset = DataLoader(CIFAR100(root="/home/le/DeepSmote/data", \
+                                                train= True, \
+                                                transform=transform, download=True), \
+                                                batch_size=512, \
+                                                num_workers=8, \
+                                                persistent_workers=True, \
+                                                sampler=DatasetSampler(idx=list(range(50000)), frac=1))
     return cifar100_dataset

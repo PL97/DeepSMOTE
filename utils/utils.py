@@ -2,6 +2,9 @@ import matplotlib.pyplot as plt
 from torchvision.utils import make_grid
 import torch
 import os
+from joblib import Parallel, delayed
+from skimage import io
+import numpy as np
 
 class UnNormalize(object):
     '''
@@ -52,3 +55,31 @@ def show_reconstruct(x, y, model, model_series_number="version_0"):
     os.makedirs(f"figures/{model_series_number}/", exist_ok=True)
     plt.savefig(f"figures/{model_series_number}/recon_img_gallery.png")
     plt.close()
+
+
+def save_img(img, l, idx, saved_path, from_tensor=True):
+    '''
+    save image to the specified path
+    input:
+    img: - image to be saved
+    l: label of the image
+    idx: unique interage to generated file name
+
+
+    saved path would be {$saved_path}/{$l}/{idx}.png
+    '''
+    if from_tensor:
+        img = img.detach().cpu().numpy().transpose(1, 2, 0)
+        img = (img*256).astype(np.uint8)
+    io.imsave(f"{saved_path}/{l}/{idx}.png", img)
+
+
+
+def save_img_batch(imglist, labellist, saved_path, start_idx):
+    ## create saved folder if not exits
+    for l in set(labellist):
+        os.makedirs(f"{saved_path}/{l}", exist_ok=True)
+    idx_list = list(range(start_idx, len(imglist)+start_idx))
+    Parallel(n_jobs=10)(delayed(save_img)(img, l, idx, saved_path)
+                        for img, l, idx in 
+                        zip(imglist, labellist, idx_list))

@@ -16,10 +16,11 @@ from sklearn.neighbors import NearestNeighbors
 from imblearn.over_sampling import SMOTE
 from pytorch_lightning.callbacks import ModelCheckpoint
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 import sys
 sys.path.append("../")
-from utils.utils import UnNormalize
+from utils.utils import UnNormalize, save_img_batch
 
 
 
@@ -131,6 +132,7 @@ class autoencoder(pl.LightningModule):
     
     def training_step(self, batch, batch_idx):
         x, y = batch
+        y = (y>=99).int()
         x_hat = self(x.to(self.device))
         loss = self.criterion(x_hat, x)
 
@@ -154,11 +156,11 @@ class autoencoder(pl.LightningModule):
         {"params": self.decoder.parameters()}],
         lr=1e-3)
 
-    def generate_using_smote(self, dl, model_series_number="version_0"):
+    def generate_using_smote(self, dl, model_series_number="version_0", save=False, saved_path="./data/"):
         features_list = []
         y_list = []
         for x, y in dl:
-            y = y>=9
+            y = (y>=99).int()
             features_list.extend(self.encoder(x).detach().cpu().numpy())
             y_list.extend(y.detach().cpu().numpy())
         
@@ -167,14 +169,24 @@ class autoencoder(pl.LightningModule):
         features_sm, y_sm = smt.fit_resample(features_list, y_list)
         print(Counter(y_sm))
 
+        if save:
+            total_imgs = len(features_sm)
+            batch_size = 512
+            for i in tqdm(range(0, total_imgs, batch_size)):
+                tmp_x = torch.tensor(np.asarray(features_sm[i:i+batch_size])).to(self.device).float()
+                tmp_y = y_sm[i:i+batch_size]
+                recon_img = self.decoder(tmp_x)
+                save_img_batch(recon_img, tmp_y, saved_path=saved_path, start_idx=i)
+                
 
-        x = torch.tensor(np.asarray(features_list[:25])).to(self.device)
-        recon_img = self.decoder(x)
-        grid = torchvision.utils.make_grid(recon_img, nrow=5).permute(1, 2, 0)
-        print(grid.shape)
-        plt.figure(figsize=(50, 50))
-        plt.imshow(grid.detach().cpu().numpy())
-        plt.savefig(f"figures/{model_series_number}/synthetic.png")
+        else:
+            x = torch.tensor(np.asarray(features_sm[:25])).to(self.device).float()
+            recon_img = self.decoder(x)
+            grid = torchvision.utils.make_grid(recon_img, nrow=5).permute(1, 2, 0)
+            print(grid.shape)
+            plt.figure(figsize=(50, 50))
+            plt.imshow(grid.detach().cpu().numpy())
+            plt.savefig(f"figures/{model_series_number}/synthetic.png")
     
     
     

@@ -6,7 +6,7 @@ import pytorch_lightning as pl
 import sys
 sys.path.append("./")
 from configs.config import parse_opts
-from datasets.cifar100 import get_cifar100_dataset
+from datasets.cifar100 import get_cifar10_dataset, get_cifar100_dataset
 from models.autoencoder import autoencoder
 from utils.utils import show_reconstruct
 
@@ -17,9 +17,19 @@ if __name__ == "__main__":
     ## load dataset
     if args.dataset == "cifar100":
         dl = get_cifar100_dataset()
+    elif args.dataset == "cifar10":
+        dl = get_cifar10_dataset()
 
     ## define model
     model = autoencoder()
+
+    if args.synthesizing:
+        model_series_number = "version_3"
+        MyLightningModule = autoencoder()
+        model = MyLightningModule.load_from_checkpoint('lightning_logs/version_0/checkpoints/epoch=299-step=7500.ckpt')
+        model.generate_using_smote(dl, model_series_number=model_series_number, save=True, saved_path="./data/cifar100")
+        exit("finished")
+
 
     ## train the model
     if args.train:
@@ -34,7 +44,7 @@ if __name__ == "__main__":
     
     
     else:
-        model_series_number = "version_0"
+        model_series_number = "version_3"
         MyLightningModule = autoencoder()
         model = MyLightningModule.load_from_checkpoint('lightning_logs/version_0/checkpoints/epoch=299-step=7500.ckpt')
         ## show reconstruction images and sythetic images
