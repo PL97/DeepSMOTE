@@ -36,4 +36,4 @@ python main.py
 - [x] hand-craft CNN
 - [ ] UNet
 
-Please star this repo if you find it helpful
+:star2: Please star this repo if you find it helpful!
