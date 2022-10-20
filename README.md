@@ -35,3 +35,5 @@ python main.py
 ### network archicture
 - [x] hand-craft CNN
 - [ ] UNet
+
+Please star this repo if you find it helpful
