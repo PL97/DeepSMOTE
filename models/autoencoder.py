@@ -170,8 +170,8 @@ class autoencoder(pl.LightningModule):
                                 input_sample=encoder_conv_output,
                                 hidden_dim=hidden_dim,
                                 output_channel=input_sample.shape[1])
-        # self.criterion = nn.BCELoss()
-        self.criterion = nn.MSELoss()
+        self.criterion = nn.BCELoss()
+        # self.criterion = nn.MSELoss()
 
     def forward(self, x):
         x = self.encoder(x)
@@ -239,11 +239,11 @@ class autoencoder(pl.LightningModule):
 if __name__ == "__main__":
     # pass
     # test case 2: create a valid autoencoder
-    test_input = torch.zeros(512, 3, 32, 32)
-    MyLightningModule = autoencoder(depth=5,
+    test_input = torch.zeros(512, 3, 224, 224)
+    MyLightningModule = autoencoder(depth=4,
                     hidden_dim=1024,
                     input_sample=test_input)
     print(MyLightningModule)
     
-    
-    print(MyLightningModule(test_input).shape)
+    print(test_input.shape)
+    print(MyLightningModule.encoder.conv(test_input).shape, MyLightningModule(test_input).shape)
