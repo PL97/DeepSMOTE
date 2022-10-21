@@ -3,6 +3,7 @@ from torchvision.datasets import CIFAR10
 from pytorch_lightning.strategies.ddp import DDPStrategy
 import pytorch_lightning as pl
 import torch
+import os
 
 import sys
 sys.path.append("./")
@@ -18,8 +19,10 @@ if __name__ == "__main__":
     args = parse_opts()
 
     #saved_name = "epoch=299-step=29400.ckpt"
-    saved_name = "epoch=299-step=3900.ckpt"
-    saved_name = "epoch=0-step=5.ckpt"
+    # saved_name = "epoch=299-step=3900.ckpt"
+    # saved_name = "epoch=0-step=5.ckpt"
+    model_series = f"version_{args.model_series}"
+    saved_name = os.listdir(f'lightning_logs/{model_series}/checkpoints/')[0]
 
     ## load dataset and define the model
     if args.dataset == "cifar100":
@@ -49,7 +52,7 @@ if __name__ == "__main__":
 
 
     if args.synthesizing:
-        model_series = f"version_{args.model_series}"
+        
         MyLightningModule = MyLightningModule.load_from_checkpoint(f'lightning_logs/{model_series}/checkpoints/{saved_name}', AE=AE)
         MyLightningModule.eval()
         MyLightningModule.generate_using_smote(dl, model_series_number=model_series, save=True, saved_path=f"./data/{args.dataset}")
