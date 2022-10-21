@@ -43,13 +43,13 @@ if __name__ == "__main__":
     if args.synthesizing:
         model_series = f"version_{args.model_series}"
         model = MyLightningModule.load_from_checkpoint(f'lightning_logs/{model_series}/checkpoints/epoch=299-step=7500.ckpt')
-        model.generate_using_smote(dl, model_series_number=model_series, save=True, saved_path="./data/cifar100")
+        model.generate_using_smote(dl, model_series_number=model_series, save=True, saved_path="./data/{args.datasets}")
         exit("finished")
 
 
     ## train the model
     if args.train:
-        trainer = pl.Trainer(max_epochs=300, 
+        trainer = pl.Trainer(max_epochs=100, 
                             accelerator="gpu", 
                             devices=4, 
                             strategy = DDPStrategy(find_unused_parameters=False),

@@ -89,10 +89,10 @@ class encoder(nn.Module):
         self.conv = []
         for d in range(depth):
             self.conv.append(nn.Conv2d(input_sample.shape[1], 12, 4, stride=2, padding=1) if d == 0
-                             else nn.Conv2d(12*d, 12*(d+1), 4, stride=2, padding=1))
+                             else nn.Conv2d(12*(2**(d-1)), 12*(2**(d)), 4, stride=2, padding=1))
             self.conv.append(nn.ReLU())
-        self.conv = nn.Sequential(*self.conv)
         
+        self.conv = nn.Sequential(*self.conv)
         conv_dim = np.prod(self.conv(input_sample).shape[1:])
         
         self.fc = nn.Sequential(
@@ -134,10 +134,10 @@ class decoder(nn.Module):
         self.deconv = []
         for d in range(depth):
             if d < depth - 1:
-                self.deconv.append(nn.ConvTranspose2d((depth-d)*12, (depth-d-1)*12, 4, stride=2, padding=1))
+                self.deconv.append(nn.ConvTranspose2d((2**(depth-d-1))*12, (2**(depth-d-2))*12, 4, stride=2, padding=1))
                 self.deconv.append(nn.ReLU())
             else:
-                self.deconv.append(nn.ConvTranspose2d((depth-d)*12, output_channel, 4, stride=2, padding=1))
+                self.deconv.append(nn.ConvTranspose2d((2**(depth-d-1))*12, output_channel, 4, stride=2, padding=1))
                 self.deconv.append(nn.Sigmoid())
         self.deconv = nn.Sequential(*self.deconv)
 
@@ -239,7 +239,7 @@ class autoencoder(pl.LightningModule):
 if __name__ == "__main__":
     # pass
     # test case 2: create a valid autoencoder
-    test_input = torch.zeros(512, 3, 224, 224)
+    test_input = torch.zeros(512, 3, 32, 32)
     MyLightningModule = autoencoder(depth=5,
                     hidden_dim=1024,
                     input_sample=test_input)
