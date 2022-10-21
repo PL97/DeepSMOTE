@@ -3,6 +3,8 @@ from torchvision import transforms
 from torchvision.datasets import CIFAR10, CIFAR100
 import numpy as np
 import torch
+from PIL import Image
+from typing import Any, Callable, Optional, Tuple
 
 class DatasetSampler(sampler.Sampler):
     '''
@@ -19,6 +21,33 @@ class DatasetSampler(sampler.Sampler):
 
     def __len__(self):
         return len(self.idx)
+    
+
+class My_CIFAR100(CIFAR100):
+    def __getitem__(self, index: int) -> Tuple[Any, Any]:
+        """
+        Args:
+            index (int): Index
+
+        Returns:
+            tuple: (image, target) where target is index of the target class.
+        """
+        img, target = self.data[index], self.targets[index]
+        
+        ## change the label to binary
+        target = int(target>=99)
+
+        # doing this so that it is consistent with all other datasets
+        # to return a PIL Image
+        img = Image.fromarray(img)
+
+        if self.transform is not None:
+            img = self.transform(img)
+
+        if self.target_transform is not None:
+            target = self.target_transform(target)
+
+        return img, target
 
 
 
@@ -28,14 +57,9 @@ def get_cifar100_dataset():
             transforms.ToTensor(),
     ])
     
-    cifar100_dataset = CIFAR100(root="./data", \
+    cifar100_dataset = My_CIFAR100(root="./data", \
                                                 train= True, \
                                                 transform=transform, download=True)
-    targets = cifar100_dataset.targets
-    targets = torch.IntTensor((np.asarray(targets)>=9).astype(int))
-    inputs = torch.tensor(cifar100_dataset.data.transpose(0, 3, 1, 2)).float()
-    
-    cifar100_dataset = TensorDataset(inputs, targets)
                 
     cifar100_dataloader = DataLoader(cifar100_dataset,\
                                         batch_size=512, \
