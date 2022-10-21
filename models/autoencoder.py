@@ -88,8 +88,8 @@ class encoder(nn.Module):
         
         self.conv = []
         for d in range(depth):
-            self.conv.append(nn.Conv2d(input_sample.shape[1], 12, 4, stride=2, padding=1) if d == 0
-                             else nn.Conv2d(12*(2**(d-1)), 12*(2**(d)), 4, stride=2, padding=1))
+            self.conv.append(nn.Conv2d(input_sample.shape[1], 12, 3, stride=2, padding=1) if d == 0
+                             else nn.Conv2d(12*(2**(d-1)), 12*(2**(d)), 3, stride=2, padding=1))
             self.conv.append(nn.LeakyReLU())
         
         self.conv = nn.Sequential(*self.conv)
