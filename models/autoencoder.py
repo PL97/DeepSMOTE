@@ -106,6 +106,7 @@ class encoder(nn.Module):
          
     def forward(self, x):
         x = self.conv(x)
+        m = nn.Flatten()
         x = self.fc(x)
         return x
     
@@ -238,10 +239,10 @@ class autoencoder(pl.LightningModule):
 if __name__ == "__main__":
     # pass
     # test case 2: create a valid autoencoder
-    test_input = torch.zeros(10, 3, 32, 32)
-    MyLightningModule = autoencoder(depth=3,
-                      hidden_dim=512,
-                      input_sample=test_input)
+    test_input = torch.zeros(512, 3, 224, 224)
+    MyLightningModule = autoencoder(depth=5,
+                    hidden_dim=1024,
+                    input_sample=test_input)
     print(MyLightningModule)
     
     

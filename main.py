@@ -39,8 +39,6 @@ if __name__ == "__main__":
                       hidden_dim=1024,
                       input_sample=test_input)
 
-    ## define model
-    model = autoencoder()
 
     if args.synthesizing:
         model_series = f"version_{args.model_series}"
@@ -58,7 +56,7 @@ if __name__ == "__main__":
                             log_every_n_steps=5)
         
 
-        trainer.fit(model, train_dataloaders=dl)
+        trainer.fit(MyLightningModule, train_dataloaders=dl)
     
     
     else:
