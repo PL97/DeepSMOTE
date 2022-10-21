@@ -21,14 +21,14 @@ if __name__ == "__main__":
     if args.dataset == "cifar100":
         dl = get_cifar100_dataset()
         test_input = torch.zeros(1, 3, 32, 32)
-        MyLightningModule = autoencoder(depth=3,
+        MyLightningModule = autoencoder(depth=4,
                       hidden_dim=512,
                       input_sample=test_input)
 
     elif args.dataset == "cifar10":
         dl = get_cifar10_dataset()
         test_input = torch.zeros(1, 3, 32, 32)
-        MyLightningModule = autoencoder(depth=3,
+        MyLightningModule = autoencoder(depth=4,
                       hidden_dim=512,
                       input_sample=test_input)
         
