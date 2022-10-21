@@ -23,6 +23,13 @@ sys.path.append("../")
 from utils.utils import UnNormalize, save_img_batch
 
 
+class View(nn.Module):
+    def __init__(self, shape):
+        super(View, self).__init__()
+        self.shape = shape
+
+    def forward(self, x):
+        return x.view(-1, *self.shape[1:]) 
 
 
 
@@ -67,22 +74,35 @@ class res_encoder(nn.Module):
  
 
 class encoder(nn.Module):
-    def __init__(self):
+    '''
+    encoder module contains two part, a set of conv layers and fc layers
+    input:
+    depth: -depth of the conv layer
+    input_sample: -a sample of input
+    hidden_dim: -hidden dimension
+    '''
+    def __init__(self, depth=3, 
+                 input_sample=torch.zeros(1, 3, 32, 32), 
+                 hidden_dim=512):
         super(encoder, self).__init__()
-        self.conv = nn.Sequential(
-            nn.Conv2d(3, 12, 4, stride=2, padding=1),            # [batch, 12, 16, 16]
-            nn.ReLU(),
-            nn.Conv2d(12, 24, 4, stride=2, padding=1),           # [batch, 24, 8, 8]
-            nn.ReLU(),
-			nn.Conv2d(24, 48, 4, stride=2, padding=1),           # [batch, 48, 4, 4]
-            nn.ReLU(),
-        )   
+        
+        self.conv = []
+        for d in range(depth):
+            self.conv.append(nn.Conv2d(input_sample.shape[1], 12, 4, stride=2, padding=1) if d == 0
+                             else nn.Conv2d(12*d, 12*(d+1), 4, stride=2, padding=1))
+            self.conv.append(nn.ReLU())
+        self.conv = nn.Sequential(*self.conv)
+        
+        conv_dim = np.prod(self.conv(input_sample).shape[1:])
+        
         self.fc = nn.Sequential(
             nn.Flatten(),
-            nn.Linear(48*4*4, 512),
+            nn.Linear(conv_dim, hidden_dim),
             # nn.ReLU(),
         )
-         
+    
+    def get_conv_output(self, x):
+        return self.conv(x)
          
     def forward(self, x):
         x = self.conv(x)
@@ -91,37 +111,64 @@ class encoder(nn.Module):
     
 class decoder(nn.Module):
     '''
-    Three layer decoder purely based on convtranspose2d
+    decoder is ensembled similarly to encoder and has two component, deconv + fc
+    input:
+    depth: -depth of the deconv layer (convtrans2d to be more specifically)
+    input_sample: -a sample of tensor output from the conv layer in encoder
+    hidden_dim: -hidden dimension
+    output_channel: -output channel which correspoding to the origional image channel
     '''
-    def __init__(self):
+    def __init__(self, 
+                 depth=3,
+                 input_sample=torch.zeros(1, 48, 4, 4),
+                 hidden_dim=512,
+                 output_channel=3):
+        
         super(decoder, self).__init__()
         self.fc = nn.Sequential(
-            nn.Linear(512, 48*4*4),
+            nn.Linear(hidden_dim, np.prod(input_sample.shape[1:])),
             # nn.ReLU()
+            View(input_sample.shape)
         )
-        self.deconv = nn.Sequential(
-			nn.ConvTranspose2d(48, 24, 4, stride=2, padding=1),  # [batch, 24, 8, 8]
-            nn.ReLU(),
-			nn.ConvTranspose2d(24, 12, 4, stride=2, padding=1),  # [batch, 12, 16, 16]
-            nn.ReLU(),
-            nn.ConvTranspose2d(12, 3, 4, stride=2, padding=1),   # [batch, 3, 32, 32]
-            nn.Sigmoid(),
-        )
+        self.deconv = []
+        for d in range(depth):
+            if d < depth - 1:
+                self.deconv.append(nn.ConvTranspose2d((depth-d)*12, (depth-d-1)*12, 4, stride=2, padding=1))
+                self.deconv.append(nn.ReLU())
+            else:
+                self.deconv.append(nn.ConvTranspose2d((depth-d)*12, output_channel, 4, stride=2, padding=1))
+                self.deconv.append(nn.Sigmoid())
+        self.deconv = nn.Sequential(*self.deconv)
+
     def forward(self, x):
         x = self.fc(x)
-        x = x.view(-1, 48, 4, 4)
+        # x = x.view(input_sample.shape)
         return self.deconv(x)
     
 
 class autoencoder(pl.LightningModule):
     '''
     Simple autoencoder compose of resnet-backended encoder and a three layer decoder
+    input:
+    depth: -depth of the conv layer in encoder and decoder
+    input_sample: -a sample of input to the encoder
+    hidden_dim: -the bottleneck output dimension (flattened tensor)
     '''
-    def __init__(self):
+    def __init__(self,
+                 depth=3,
+                 input_sample=torch.zeros(1, 3, 32, 32), 
+                 hidden_dim=512):
         super(autoencoder, self).__init__()
-        self.encoder = encoder()
+        self.encoder = encoder(depth=depth,
+                               input_sample=input_sample, 
+                                hidden_dim=hidden_dim)
         
-        self.decoder = decoder()
+        encoder_conv_output = self.encoder.get_conv_output(input_sample)
+        
+        self.decoder = decoder(depth=depth,
+                                input_sample=encoder_conv_output,
+                                hidden_dim=hidden_dim,
+                                output_channel=input_sample.shape[1])
         # self.criterion = nn.BCELoss()
         self.criterion = nn.MSELoss()
 
@@ -132,7 +179,6 @@ class autoencoder(pl.LightningModule):
     
     def training_step(self, batch, batch_idx):
         x, y = batch
-        y = (y>=99).int()
         x_hat = self(x.to(self.device))
         loss = self.criterion(x_hat, x)
 
@@ -160,7 +206,6 @@ class autoencoder(pl.LightningModule):
         features_list = []
         y_list = []
         for x, y in dl:
-            y = (y>=99).int()
             features_list.extend(self.encoder(x).detach().cpu().numpy())
             y_list.extend(y.detach().cpu().numpy())
         
@@ -191,9 +236,13 @@ class autoencoder(pl.LightningModule):
     
     
 if __name__ == "__main__":
-    pass
-    # # test case 2: create a valid autoencoder
-    # net = autoencoder()
-    # test_input = torch.zeros(1, 3, 32, 32)
+    # pass
+    # test case 2: create a valid autoencoder
+    test_input = torch.zeros(10, 3, 32, 32)
+    MyLightningModule = autoencoder(depth=3,
+                      hidden_dim=512,
+                      input_sample=test_input)
+    print(MyLightningModule)
     
-    # print(net(test_input).shape)
+    
+    print(MyLightningModule(test_input).shape)
