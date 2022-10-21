@@ -39,6 +39,7 @@ class My_CIFAR10(CIFAR10):
 def get_cifar10_dataset():
         transform = transforms.Compose([
                 transforms.ToTensor(),
+                transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ])
 
         cifar10_dataset = My_CIFAR10(root="./data", \

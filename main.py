@@ -16,6 +16,7 @@ from utils.utils import show_reconstruct
 
 if __name__ == "__main__":
     args = parse_opts()
+    saved_name = "epoch=99-step=2500.ckpt"
 
     ## load dataset and define the model
     if args.dataset == "cifar100":
@@ -38,11 +39,12 @@ if __name__ == "__main__":
         MyLightningModule = autoencoder(depth=5,
                       hidden_dim=1024,
                       input_sample=test_input)
+        
 
 
     if args.synthesizing:
         model_series = f"version_{args.model_series}"
-        model = MyLightningModule.load_from_checkpoint(f'lightning_logs/{model_series}/checkpoints/epoch=299-step=7500.ckpt')
+        model = MyLightningModule.load_from_checkpoint(f'lightning_logs/{model_series}/checkpoints/{saved_name}')
         model.generate_using_smote(dl, model_series_number=model_series, save=True, saved_path="./data/{args.datasets}")
         exit("finished")
 
@@ -61,7 +63,7 @@ if __name__ == "__main__":
     
     else:
         model_series = f"version_{args.model_series}"
-        model = MyLightningModule.load_from_checkpoint(f'lightning_logs/{model_series}/checkpoints/epoch=299-step=7500.ckpt')
+        model = MyLightningModule.load_from_checkpoint(f'lightning_logs/{model_series}/checkpoints/{saved_name}')
         ## show reconstruction images and sythetic images
         x, y = next(iter(dl))
         show_reconstruct(x[:5], y[:5], model, model_series_number=model_series)

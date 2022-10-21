@@ -55,6 +55,7 @@ class My_CIFAR100(CIFAR100):
 def get_cifar100_dataset():
     transform = transforms.Compose([
             transforms.ToTensor(),
+            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     ])
     
     cifar100_dataset = My_CIFAR100(root="./data", \

@@ -195,7 +195,7 @@ class autoencoder(pl.LightningModule):
 
         x_tilt_enc_rand = x_tilt_enc[idx]
         x_tilt_enc_rand_dec = self.decoder(x_tilt_enc_rand)
-        loss += self.criterion(x_tilt_enc_rand_dec, x_tilt)
+        loss += 0.5*self.criterion(x_tilt_enc_rand_dec, x_tilt)
         return loss
     
     def configure_optimizers(self):
