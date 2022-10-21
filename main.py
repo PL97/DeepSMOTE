@@ -16,7 +16,8 @@ from utils.utils import show_reconstruct
 
 if __name__ == "__main__":
     args = parse_opts()
-    saved_name = "epoch=99-step=9800.ckpt"
+    #saved_name = "epoch=299-step=29400.ckpt"
+    saved_name = "epoch=299-step=3900.ckpt"
 
     ## load dataset and define the model
     if args.dataset == "cifar100":
@@ -45,7 +46,7 @@ if __name__ == "__main__":
     if args.synthesizing:
         model_series = f"version_{args.model_series}"
         model = MyLightningModule.load_from_checkpoint(f'lightning_logs/{model_series}/checkpoints/{saved_name}')
-        model.generate_using_smote(dl, model_series_number=model_series, save=True, saved_path="./data/{args.datasets}")
+        model.generate_using_smote(dl, model_series_number=model_series, save=True, saved_path=f"./data/{args.dataset}")
         exit("finished")
 
 
@@ -53,7 +54,7 @@ if __name__ == "__main__":
     if args.train:
         trainer = pl.Trainer(max_epochs=300, 
                             accelerator="gpu", 
-                            devices=4, 
+                            devices=1, 
                             strategy = DDPStrategy(find_unused_parameters=False),
                             log_every_n_steps=5)
         
