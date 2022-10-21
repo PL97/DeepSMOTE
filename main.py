@@ -16,12 +16,9 @@ from utils.utils import show_reconstruct
 
 if __name__ == "__main__":
     args = parse_opts()
-<<<<<<< HEAD
-    saved_name = "epoch=299-step=9800.ckpt"
-=======
+
     #saved_name = "epoch=299-step=29400.ckpt"
     saved_name = "epoch=299-step=3900.ckpt"
->>>>>>> 95be04783b2b5aa2eb56dcf036cd7b8e58f30e58
 
     ## load dataset and define the model
     if args.dataset == "cifar100":
@@ -60,7 +57,7 @@ if __name__ == "__main__":
                             accelerator="gpu", 
                             devices=1, 
                             strategy = DDPStrategy(find_unused_parameters=False),
-                            log_every_n_steps=5)
+                            log_every_n_steps=20)
         
 
         trainer.fit(MyLightningModule, train_dataloaders=dl)
