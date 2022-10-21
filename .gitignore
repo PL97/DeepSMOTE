@@ -2,4 +2,4 @@ lightning_logs/
 data/
 *.slurm
 *.out
-figures/
+# figures/
