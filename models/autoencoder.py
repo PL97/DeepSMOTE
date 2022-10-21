@@ -151,21 +151,13 @@ class decoder(nn.Module):
         x = self.fc(x)
         # x = x.view(input_sample.shape)
         return self.deconv(x)
-    
 
-class autoencoder(pl.LightningModule):
-    '''
-    Simple autoencoder compose of resnet-backended encoder and a three layer decoder
-    input:
-    depth: -depth of the conv layer in encoder and decoder
-    input_sample: -a sample of input to the encoder
-    hidden_dim: -the bottleneck output dimension (flattened tensor)
-    '''
+class AE(nn.Module):
     def __init__(self,
                  depth=3,
                  input_sample=torch.zeros(1, 3, 32, 32), 
                  hidden_dim=512):
-        super(autoencoder, self).__init__()
+        super(AE, self).__init__()
         self.encoder = encoder(depth=depth,
                                input_sample=input_sample, 
                                 hidden_dim=hidden_dim)
@@ -176,12 +168,29 @@ class autoencoder(pl.LightningModule):
                                 input_sample=encoder_conv_output,
                                 hidden_dim=hidden_dim,
                                 output_channel=input_sample.shape[1])
+    def forward(self, x):
+        x = self.encoder(x)
+        return self.decoder(x)
+    
+
+
+class AE_LM(pl.LightningModule):
+    '''
+    Simple autoencoder compose of resnet-backended encoder and a three layer decoder
+    input:
+    depth: -depth of the conv layer in encoder and decoder
+    input_sample: -a sample of input to the encoder
+    hidden_dim: -the bottleneck output dimension (flattened tensor)
+    '''
+    def __init__(self, AE):
+        super().__init__()
+        self.AE = AE
         # self.criterion = nn.BCELoss()
         self.criterion = nn.MSELoss()
 
     def forward(self, x):
-        x = self.encoder(x)
-        x = self.decoder(x)
+        x = self.AE.encoder(x)
+        x = self.AE.decoder(x)
         return x
     
     def training_step(self, batch, batch_idx):
@@ -192,7 +201,7 @@ class autoencoder(pl.LightningModule):
         ## permute same class
         x_tilt=x.clone()
         y = y.detach().cpu().numpy()
-        x_tilt_enc = self.encoder(x_tilt)
+        x_tilt_enc = self.AE.encoder(x_tilt)
         idx = np.array(range(x_tilt.size(0)))
         for i in set(y):
             tmp = idx[y==i]
@@ -200,20 +209,20 @@ class autoencoder(pl.LightningModule):
             idx[y==i] = tmp
 
         x_tilt_enc_rand = x_tilt_enc[idx]
-        x_tilt_enc_rand_dec = self.decoder(x_tilt_enc_rand)
+        x_tilt_enc_rand_dec = self.AE.decoder(x_tilt_enc_rand)
         loss += self.criterion(x_tilt_enc_rand_dec, x_tilt)
         return loss
     
     def configure_optimizers(self):
-        return torch.optim.Adam([{"params": self.encoder.parameters()},
-        {"params": self.decoder.parameters()}],
+        return torch.optim.Adam([{"params": self.AE.encoder.parameters()},
+        {"params": self.AE.decoder.parameters()}],
         lr=1e-3)
 
     def generate_using_smote(self, dl, model_series_number="version_0", save=False, saved_path="./data/"):
         features_list = []
         y_list = []
         for x, y in dl:
-            features_list.extend(self.encoder(x).detach().cpu().numpy())
+            features_list.extend(self.AE.encoder(x).detach().cpu().numpy())
             y_list.extend(y.detach().cpu().numpy())
         
         print("Origional label distributin:", Counter(y_list))
@@ -227,13 +236,13 @@ class autoencoder(pl.LightningModule):
             for i in tqdm(range(0, total_imgs, batch_size)):
                 tmp_x = torch.tensor(np.asarray(features_sm[i:i+batch_size])).to(self.device).float()
                 tmp_y = y_sm[i:i+batch_size]
-                recon_img = self.decoder(tmp_x)
+                recon_img = self.AE.decoder(tmp_x)
                 save_img_batch(recon_img, tmp_y, saved_path=saved_path, start_idx=i)
                 
 
         else:
             x = torch.tensor(np.asarray(features_sm[:25])).to(self.device).float()
-            recon_img = self.decoder(x)
+            recon_img = self.AE.decoder(x)
             grid = torchvision.utils.make_grid(recon_img, nrow=5).permute(1, 2, 0)
             print(grid.shape)
             plt.figure(figsize=(50, 50))
@@ -242,14 +251,16 @@ class autoencoder(pl.LightningModule):
     
     
     
+    
 if __name__ == "__main__":
     # pass
     # test case 2: create a valid autoencoder
     test_input = torch.zeros(512, 3, 32, 32)
-    MyLightningModule = autoencoder(depth=1,
+    model = AE(depth=1,
                     hidden_dim=1024,
                     input_sample=test_input)
+    MyLightningModule = AE_LM(AE=model)
     print(MyLightningModule)
     
     print(test_input.shape)
-    print(MyLightningModule.encoder.conv(test_input).shape, MyLightningModule(test_input).shape)
+    print(MyLightningModule.AE.encoder.conv(test_input).shape, MyLightningModule(test_input).shape)

@@ -83,13 +83,13 @@ class HAM(Dataset):
 def get_HAM_dataloader(mode="train"):
     run_number = 1
     # if ctx['server'] == "MSI":
-    root_path = "/home/jusun/shared/HAM/"
+    # root_path = "/home/jusun/shared/HAM/"
     # else:
-    # root_path = "/home/le/TL/sync/truncatedTL/HAM/"
+    root_path = "/home/le/TL/sync/truncatedTL/HAM/"
     df = pd.read_csv(os.path.join(root_path, f"{run_number}/{mode}.csv"))
     ham_ds = HAM(df=df, root_dir=root_path+"jpgs/")
     dataloader = torch.utils.data.DataLoader(ham_ds, \
-                                            batch_size=512, \
+                                            batch_size=128, \
                                             # shuffle=True, \
                                             num_workers=24, \
                                             persistent_workers=True, \
