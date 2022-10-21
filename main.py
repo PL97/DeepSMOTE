@@ -16,7 +16,7 @@ from utils.utils import show_reconstruct
 
 if __name__ == "__main__":
     args = parse_opts()
-    saved_name = "epoch=99-step=2500.ckpt"
+    saved_name = "epoch=99-step=9800.ckpt"
 
     ## load dataset and define the model
     if args.dataset == "cifar100":

@@ -46,7 +46,7 @@ def get_cifar10_dataset():
                                         train= True, \
                                         transform=transform, download=True)
         cifar10_dataloader = DataLoader(cifar10_dataset, \
-                        batch_size=512, \
+                        batch_size=128, \
                         num_workers=8, \
                         persistent_workers=True, \
                         sampler=DatasetSampler(idx=list(range(50000)), frac=1))

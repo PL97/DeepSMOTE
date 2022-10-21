@@ -88,8 +88,10 @@ class encoder(nn.Module):
         
         self.conv = []
         for d in range(depth):
-            self.conv.append(nn.Conv2d(input_sample.shape[1], 12, 3, stride=2, padding=1) if d == 0
-                             else nn.Conv2d(12*(2**(d-1)), 12*(2**(d)), 3, stride=2, padding=1))
+            self.conv.append(nn.Conv2d(input_sample.shape[1], 12, 4, stride=2, padding=1) if d == 0
+                             else nn.Conv2d(12*(2**(d-1)), 12*(2**(d)), 4, stride=2, padding=1))
+            # self.conv.append(nn.Conv2d(input_sample.shape[1], 12, 3, stride=2, padding=1) if d == 0
+            #                  else nn.Conv2d(12*(2**(d-1)), 12*(2**(d)), 3, stride=2, padding=1))
             self.conv.append(nn.LeakyReLU())
         
         self.conv = nn.Sequential(*self.conv)
@@ -134,14 +136,14 @@ class decoder(nn.Module):
         self.deconv = []
         for d in range(depth):
             if d < depth - 1:
-                # self.deconv.append(nn.ConvTranspose2d((2**(depth-d-1))*12, (2**(depth-d-2))*12, 3, stride=2, padding=0))
-                self.deconv.append(nn.UpsamplingBilinear2d(scale_factor=2))
-                self.deconv.append(nn.Conv2d((2**(depth-d-1))*12, (2**(depth-d-2))*12, 3, stride=1, padding=1))
+                self.deconv.append(nn.ConvTranspose2d((2**(depth-d-1))*12, (2**(depth-d-2))*12, 4, stride=2, padding=1))
+                # self.deconv.append(nn.UpsamplingBilinear2d(scale_factor=2))
+                # self.deconv.append(nn.Conv2d((2**(depth-d-1))*12, (2**(depth-d-2))*12, 3, stride=1, padding=1))
                 self.deconv.append(nn.LeakyReLU())
             else:
-                # self.deconv.append(nn.ConvTranspose2d((2**(depth-d-1))*12, output_channel, 3, stride=2, padding=0))
-                self.deconv.append(nn.UpsamplingBilinear2d(scale_factor=2))
-                self.deconv.append(nn.Conv2d((2**(depth-d-1))*12, output_channel, 3, stride=1, padding=1))
+                self.deconv.append(nn.ConvTranspose2d((2**(depth-d-1))*12, output_channel, 4, stride=2, padding=1))
+                # self.deconv.append(nn.UpsamplingBilinear2d(scale_factor=2))
+                # self.deconv.append(nn.Conv2d((2**(depth-d-1))*12, output_channel, 3, stride=1, padding=1))
                 self.deconv.append(nn.Sigmoid())
         self.deconv = nn.Sequential(*self.deconv)
 
@@ -174,8 +176,8 @@ class autoencoder(pl.LightningModule):
                                 input_sample=encoder_conv_output,
                                 hidden_dim=hidden_dim,
                                 output_channel=input_sample.shape[1])
-        self.criterion = nn.BCELoss()
-        # self.criterion = nn.MSELoss()
+        # self.criterion = nn.BCELoss()
+        self.criterion = nn.MSELoss()
 
     def forward(self, x):
         x = self.encoder(x)
@@ -199,7 +201,7 @@ class autoencoder(pl.LightningModule):
 
         x_tilt_enc_rand = x_tilt_enc[idx]
         x_tilt_enc_rand_dec = self.decoder(x_tilt_enc_rand)
-        loss += 0.5*self.criterion(x_tilt_enc_rand_dec, x_tilt)
+        loss += self.criterion(x_tilt_enc_rand_dec, x_tilt)
         return loss
     
     def configure_optimizers(self):
