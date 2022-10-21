@@ -58,7 +58,7 @@ if __name__ == "__main__":
 
     ## train the model
     if args.train:
-        trainer = pl.Trainer(max_epochs=1, 
+        trainer = pl.Trainer(max_epochs=300, 
                             accelerator="gpu", 
                             devices=1, 
                             strategy = DDPStrategy(find_unused_parameters=False),
