@@ -45,10 +45,10 @@ class UnNormalize(object):
 def show_reconstruct(x, y, model, model_series_number="version_0"):
     
     plt.figure()
-    unnorm = UnNormalize(norm_type="imagenet")
-    recon_img = unnorm(model(x))
-    grid1 = make_grid(x, nrow=1)
-    grid2 = make_grid(recon_img, nrow=1)
+    unnorm = UnNormalize(fake=True, norm_type="imagenet")
+    recon_img = model(x)
+    grid1 = make_grid(unnorm(x), nrow=1)
+    grid2 = make_grid(unnorm(recon_img), nrow=1)
     grid = torch.concat([grid1, grid2], axis=2).permute(1, 2, 0)
     plt.figure(figsize=(20, 50))
     plt.imshow(grid.detach().cpu().numpy())
@@ -77,7 +77,7 @@ def save_img(img, l, idx, saved_path, from_tensor=True):
 
 def save_img_batch(imglist, labellist, saved_path, start_idx):
     ## create saved folder if not exits
-    unnorm = UnNormalize(norm_type="imagenet")
+    unnorm = UnNormalize(fake=True, norm_type="imagenet")
     for l in set(labellist):
         os.makedirs(f"{saved_path}/{l}", exist_ok=True)
     idx_list = list(range(start_idx, len(imglist)+start_idx))

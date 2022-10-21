@@ -90,7 +90,7 @@ class encoder(nn.Module):
         for d in range(depth):
             self.conv.append(nn.Conv2d(input_sample.shape[1], 12, 4, stride=2, padding=1) if d == 0
                              else nn.Conv2d(12*(2**(d-1)), 12*(2**(d)), 4, stride=2, padding=1))
-            self.conv.append(nn.ReLU())
+            self.conv.append(nn.LeakyReLU())
         
         self.conv = nn.Sequential(*self.conv)
         conv_dim = np.prod(self.conv(input_sample).shape[1:])
@@ -135,7 +135,7 @@ class decoder(nn.Module):
         for d in range(depth):
             if d < depth - 1:
                 self.deconv.append(nn.ConvTranspose2d((2**(depth-d-1))*12, (2**(depth-d-2))*12, 4, stride=2, padding=1))
-                self.deconv.append(nn.ReLU())
+                self.deconv.append(nn.LeakyReLU())
             else:
                 self.deconv.append(nn.ConvTranspose2d((2**(depth-d-1))*12, output_channel, 4, stride=2, padding=1))
                 self.deconv.append(nn.Sigmoid())
