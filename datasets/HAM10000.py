@@ -93,7 +93,7 @@ def get_HAM_dataloader(mode="train"):
                                             # shuffle=True, \
                                             num_workers=24, \
                                             persistent_workers=True, \
-                                            sampler=DatasetSampler(idx=list(range(df.shape[0])), frac=1))
+                                            sampler=DatasetSampler(idx=list(range(df.shape[0])), frac=0.1))
 
 
     return dataloader
