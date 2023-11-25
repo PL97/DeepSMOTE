@@ -37,3 +37,13 @@ python main.py
 - [ ] UNet
 
 :star2: Please star this repo if you find it helpful!
+
+If you find this git repo useful, please consider citing the associated paper and ***acknowledge our implementation*** using the snippet below:
+```bibtex
+@article{peng2022imbalanced,
+  title={Imbalanced Classification in Medical Imaging},
+  author={Peng, Le and Travadi, Yash and Zhang, Rui and Cui, Ying and Sun, Ju},
+  journal={arXiv preprint arXiv:2210.12234},
+  year={2022}
+}
+```
